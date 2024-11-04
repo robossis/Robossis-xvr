@@ -1,12 +1,13 @@
 from random import randint, random
 
+import ants
 import kornia.augmentation as K
 import numpy as np
 import torch
 import torchio
-from ants import read_transform
 from diffdrr.data import transform_hu_to_density
 from diffdrr.pose import RigidTransform, convert, make_matrix
+from torchio.data.io import get_sitk_metadata_from_ras_affine
 from torchvision.transforms import Compose, Normalize, Resize
 from torchvision.transforms.functional import center_crop, pad
 
@@ -95,7 +96,7 @@ def get_4x4(mat, img, invert=False):
     """Get the rigid or affine matrix for warping img_warped -> img."""
     img = torchio.ScalarImage(img)
 
-    transform = read_transform(mat)
+    transform = ants.read_transform(mat)
     if invert:
         transform = transform.invert()
     R = transform.parameters[:9].reshape(3, 3)
@@ -108,8 +109,7 @@ def get_4x4(mat, img, invert=False):
     M[:3, 3] = global_t
 
     D = np.eye(4)
-    dirs = np.array(img.direction).reshape(3, 3)
-    D[:3, :3] = dirs
+    D[:3, :3] = direction(img)
 
     Tinv = np.eye(4)
     Tinv[:3, 3] = -np.array(img.get_center())
@@ -119,6 +119,29 @@ def get_4x4(mat, img, invert=False):
     T = RigidTransform(T)
 
     return project_onto_SO3(T)
+
+
+def ants_rigid_register(fix_filename, mov_filename, savepath):
+    """Rigidly register the new volume to the template with ANTs."""
+    img_fix = ants.image_read(fix_filename)
+    img_mov = ants.image_read(mov_filename)
+    result = ants.registration(
+        img_fix,
+        img_mov,
+        type_of_transform="Rigid",
+        aff_random_sampling_rate=0.666,
+        aff_iterations=(200, 200, 50),
+        aff_shrink_factors=(6, 4, 2),
+        aff_smoothing_sigmas=(3, 2, 1),
+    )
+    transform = ants.read_transform(result["fwdtransforms"][0])
+    ants.write_transform(transform, savepath)
+
+
+def direction(img: torchio.ScalarImage):
+    """Volume directions in RAS space (comport with ANTS convention)."""
+    *_, direction = get_sitk_metadata_from_ras_affine(img.affine)
+    return np.array(direction).reshape(3, 3)
 
 
 def project_onto_SO3(T: RigidTransform):

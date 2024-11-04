@@ -18,7 +18,7 @@ from xvr.renderer import initialize_drr
 from xvr.utils import XrayTransforms
 
 
-class RegistrarBase:
+class _RegistrarBase:
     def __init__(
         self,
         volume,
@@ -28,6 +28,7 @@ class RegistrarBase:
         crop,
         subtract_background,
         linearize,
+        reducefn,
         scales,
         reverse_x_axis,
         renderer,
@@ -74,7 +75,9 @@ class RegistrarBase:
         # Initialize the image similarity metric
         imagesim1 = MultiscaleNormalizedCrossCorrelation2d([None, 9], [0.5, 0.5])
         imagesim2 = GradientNormalizedCrossCorrelation2d(patch_size=11, sigma=10).cuda()
-        self.imagesim = lambda x, y: 0.5 * imagesim1(x, y) + 0.5 * imagesim2(x, y)
+        self.imagesim = lambda x, y, beta: beta * imagesim1(x, y) + (
+            1 - beta
+        ) * imagesim2(x, y)
 
         ### Other arguments
 
@@ -82,6 +85,7 @@ class RegistrarBase:
         self.crop = crop
         self.subtract_background = subtract_background
         self.linearize = linearize
+        self.reducefn = reducefn
 
         # Registration SE(3) parameterization
         self.parameterization = parameterization
@@ -104,7 +108,7 @@ class RegistrarBase:
         """Get initial pose estimate and image intrinsics."""
         raise NotImplementedError
 
-    def run(self, i2d):
+    def run(self, i2d, beta=0.5):
         # Predict the initial pose with a pretrained network
         gt, sdd, delx, dely, x0, y0, init_pose = self.initialize_pose(i2d)
         *_, height, width = gt.shape
@@ -175,7 +179,7 @@ class RegistrarBase:
                 optimizer.zero_grad()
                 pred_img = reg()
                 pred_img = transform(pred_img)
-                loss = self.imagesim(img, pred_img)
+                loss = self.imagesim(img, pred_img, beta=beta)
                 loss.backward()
                 optimizer.step()
                 scheduler.step(loss)
@@ -210,7 +214,7 @@ class RegistrarBase:
         with torch.no_grad():
             pred_img = reg()
             pred_img = transform(pred_img)
-            loss = self.imagesim(img, pred_img)
+            loss = self.imagesim(img, pred_img, beta=beta)
         nccs.append(loss.item())
         trajectory = _make_csv(
             params,
@@ -242,7 +246,7 @@ class RegistrarBase:
         raise NotImplementedError
 
 
-class RegistrarModel(RegistrarBase):
+class RegistrarModel(_RegistrarBase):
     def __init__(
         self,
         volume,
@@ -252,6 +256,7 @@ class RegistrarModel(RegistrarBase):
         crop=0,
         subtract_background=False,
         linearize=True,
+        reducefn="max",
         warp=None,
         invert=False,
         scales="8",
@@ -286,6 +291,7 @@ class RegistrarModel(RegistrarBase):
             crop,
             subtract_background,
             linearize,
+            reducefn,
             scales,
             reverse_x_axis,
             renderer,
@@ -306,7 +312,7 @@ class RegistrarModel(RegistrarBase):
     def initialize_pose(self, i2d):
         # Preprocess X-ray image and get imaging system intrinsics
         gt, sdd, delx, dely, x0, y0 = read_xray(
-            i2d, self.crop, self.subtract_background, self.linearize
+            i2d, self.crop, self.subtract_background, self.linearize, self.reducefn
         )
 
         # Predict the pose of the X-ray image
@@ -330,6 +336,7 @@ class RegistrarModel(RegistrarBase):
                     "crop": self.crop,
                     "subtract_background": self.subtract_background,
                     "linearize": self.linearize,
+                    "reducefn": self.reducefn,
                     "warp": warp,
                     "invert": self.invert,
                     "init_only": self.init_only,
@@ -357,7 +364,7 @@ class RegistrarModel(RegistrarBase):
         )
 
 
-class RegistrarDicom(RegistrarBase):
+class RegistrarDicom(_RegistrarBase):
     def __init__(
         self,
         volume,
@@ -367,6 +374,7 @@ class RegistrarDicom(RegistrarBase):
         crop=0,
         subtract_background=False,
         linearize=True,
+        reducefn="max",
         scales="8",
         reverse_x_axis=True,
         renderer="trilinear",
@@ -391,6 +399,7 @@ class RegistrarDicom(RegistrarBase):
             crop,
             subtract_background,
             linearize,
+            reducefn,
             scales,
             reverse_x_axis,
             renderer,
@@ -411,7 +420,7 @@ class RegistrarDicom(RegistrarBase):
     def initialize_pose(self, i2d):
         # Preprocess X-ray image and get imaging system intrinsics
         gt, sdd, delx, dely, x0, y0 = read_xray(
-            i2d, self.crop, self.subtract_background, self.linearize
+            i2d, self.crop, self.subtract_background, self.linearize, self.reducefn
         )
 
         # Parse the pose from dicom parameters
@@ -430,6 +439,7 @@ class RegistrarDicom(RegistrarBase):
                     "crop": self.crop,
                     "subtract_background": self.subtract_background,
                     "linearize": self.linearize,
+                    "reducefn": self.reducefn,
                     "init_only": self.init_only,
                     "labels": self.labels,
                     "scales": self.scales,
@@ -453,7 +463,7 @@ class RegistrarDicom(RegistrarBase):
         )
 
 
-class RegistrarFixed(RegistrarBase):
+class RegistrarFixed(_RegistrarBase):
     def __init__(
         self,
         volume,
@@ -462,6 +472,7 @@ class RegistrarFixed(RegistrarBase):
         rot,
         xyz,
         labels=None,
+        reducefn="max",
         crop=0,
         subtract_background=False,
         linearize=True,
@@ -489,6 +500,7 @@ class RegistrarFixed(RegistrarBase):
             crop,
             subtract_background,
             linearize,
+            reducefn,
             scales,
             reverse_x_axis,
             renderer,
@@ -515,7 +527,7 @@ class RegistrarFixed(RegistrarBase):
     def initialize_pose(self, i2d):
         # Preprocess X-ray image and get imaging system intrinsics
         gt, sdd, delx, dely, x0, y0 = read_xray(
-            i2d, self.crop, self.subtract_background, self.linearize
+            i2d, self.crop, self.subtract_background, self.linearize, self.reducefn
         )
 
         return gt, sdd, delx, dely, x0, y0, self.init_pose
@@ -531,6 +543,7 @@ class RegistrarFixed(RegistrarBase):
                     "crop": self.crop,
                     "subtract_background": self.subtract_background,
                     "linearize": self.linearize,
+                    "reducefn": self.reducefn,
                     "init_only": self.init_only,
                     "labels": self.labels,
                     "scales": self.scales,

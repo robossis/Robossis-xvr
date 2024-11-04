@@ -58,6 +58,11 @@ def _parse_dicom(filename):
     except AttributeError:
         y0, x0 = 0.0, 0.0
 
+    # Reorient lateral images from posterior-foot (PF) to anterior-foot (AF)
+    # https://dicom.innolitics.com/ciods/x-ray-angiographic-image/general-image/00200020
+    if ds.PatientOrientation == ["P", "F"]:
+        img = torch.flip(img, dims=[-1])
+
     return img, float(sdd), float(delx), float(dely), float(x0), float(y0)
 
 
@@ -89,7 +94,7 @@ def _preprocess_xray(img, crop, subtract_background, linearize, reducefn):
 
     # Subtract background color (the mode image intensity)
     if subtract_background:
-        background = img.mode().values.mode().values.item()
+        background = img.flatten().mode().values.item()
         img -= background
         img = torch.clamp(img, -1, 0) + 1  # Restrict to [0, 1]
 
