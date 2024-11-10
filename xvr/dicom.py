@@ -25,6 +25,8 @@ def read_xray(
         Subtract the mode image intensity from the image.
     linearize : bool, optional
         Convert the X-ray image from exponential to linear form.
+    reducefn :
+        If DICOM is multiframe, how to extract a single 2D image for registration.
     """
 
     # Get the image and imaging system intrinsics
@@ -60,8 +62,11 @@ def _parse_dicom(filename):
 
     # Reorient lateral images from posterior-foot (PF) to anterior-foot (AF)
     # https://dicom.innolitics.com/ciods/x-ray-angiographic-image/general-image/00200020
-    if ds.PatientOrientation == ["P", "F"]:
-        img = torch.flip(img, dims=[-1])
+    try:
+        if ds.PatientOrientation == ["P", "F"]:
+            img = torch.flip(img, dims=[-1])
+    except AttributeError:
+        pass
 
     return img, float(sdd), float(delx), float(dely), float(x0), float(y0)
 
