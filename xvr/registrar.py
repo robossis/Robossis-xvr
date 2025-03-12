@@ -112,19 +112,11 @@ class _RegistrarBase:
         """Get initial pose estimate and image intrinsics."""
         raise NotImplementedError
 
-    def run(self, i2d, beta=0.5):
+    def run(self, i2d, beta):
         # Predict the initial pose with a pretrained network
         gt, sdd, delx, dely, x0, y0, pf_to_af, init_pose = self.initialize_pose(i2d)
         *_, height, width = gt.shape
-        intrinsics = {
-            "sdd": sdd,
-            "height": height,
-            "width": width,
-            "delx": delx,
-            "dely": dely,
-            "x0": x0,
-            "y0": y0,
-        }
+        intrinsics = dict(sdd=sdd, height=height, width=width, delx=delx, dely=dely, x0=-x0, y0=y0)
 
         # Parse the scales for multiscale registration
         scales = _parse_scales(self.scales, self.crop, height)
@@ -237,13 +229,14 @@ class _RegistrarBase:
             dict(pf_to_af=pf_to_af, trajectory=trajectory),
         )
 
-    def __call__(self, i2d, outpath):
+    def __call__(self, i2d, outpath, beta=0.5):
         # Make the savepath
+        i2d = Path(i2d)
         savepath = Path(outpath) / f"{i2d.stem}"
         savepath.mkdir(parents=True, exist_ok=True)
 
         # Run the registration
-        gt, intrinsics, drr, init_pose, final_pose, kwargs = self.run(i2d)
+        gt, intrinsics, drr, init_pose, final_pose, kwargs = self.run(i2d, beta=beta)
 
         # Generate DRRs from the intial and final pose estimates
         if self.saveimg:
@@ -561,7 +554,7 @@ class RegistrarFixed(_RegistrarBase):
 
 
 def _parse_scales(scales: str, crop: int, height: int):
-    pyramid = [1.0] + [float(x) * ((height - crop) / height) for x in scales.split(",")]
+    pyramid = [1.0] + [float(x) * (height / (height + crop)) for x in scales.split(",")]
     scales = []
     for idx in range(len(pyramid) - 1):
         scales.append(pyramid[idx] / pyramid[idx + 1])

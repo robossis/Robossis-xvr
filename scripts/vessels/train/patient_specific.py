@@ -1,13 +1,16 @@
+from pathlib import Path
 from subprocess import run
 
 import submitit
 
 
 def main(subject_id):
+    dir = Path(__file__).parents[3]
+
     command = f"""
     xvr train \
-        -i data/ljubljana/subject{subject_id:02d}/volume.nii.gz \
-        -o models/vessels/patient_specific/subject{subject_id:02d} \
+        -i {dir}/data/ljubljana/subject{subject_id:02d}/volume.nii.gz \
+        -o {dir}/models/vessels/patient_specific/subject{subject_id:02d} \
         --r1 -45.0 90.0 \
         --r2 -5.0 5.0 \
         --r3 -5.0 5.0 \
@@ -37,8 +40,8 @@ if __name__ == "__main__":
         gpus_per_node=1,
         mem_gb=12.0,
         slurm_array_parallelism=len(subject_id),
-        slurm_partition="2080ti",
-        slurm_exclude="",
+        slurm_partition="polina-2080ti",
+        slurm_qos="vision-polina-main",
         timeout_min=10_000,
     )
     jobs = executor.map_array(main, subject_id)

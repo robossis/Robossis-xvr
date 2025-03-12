@@ -4,18 +4,18 @@ from subprocess import run
 import submitit
 
 
-def main(model):
+def main(subject_id):
     dir = Path(__file__).parents[3]
 
-    subject_id = str(model.parent).split("/")[-1]
+    model = sorted(Path(dir / "models/vessels/patient_agnostic").glob("*1100.pth"))[-1]
     epoch = model.stem.split("_")[-1]
 
     command = f"""
     xvr register model \
-        {dir}/data/ljubljana/{subject_id}/xrays \
-        -v {dir}/data/ljubljana/{subject_id}/volume.nii.gz \
-        -c {dir / model} \
-        -o {dir}/results/ljubljana/register/patient_specific/{subject_id}/{epoch} \
+        {dir}/data/ljubljana/subject{subject_id:02d}/xrays \
+        -v {dir}/data/ljubljana/subject{subject_id:02d}/volume.nii.gz \
+        -c {model} \
+        -o {dir}/results/ljubljana/register/patient_agnostic/subject{subject_id:02d}/{epoch} \
         --linearize \
         --subtract_background \
         --scales 15,7.5,5 \
@@ -26,11 +26,11 @@ def main(model):
 
 
 if __name__ == "__main__":
-    models = list(Path("models/vessels/patient_specific").glob("**/*645.pth"))
+    subject_ids = list(range(1, 11))
 
     executor = submitit.AutoExecutor(folder="logs")
     executor.update_parameters(
-        name="xvr-vessels-register-specific",
+        name="xvr-vessels-register-agnostic",
         gpus_per_node=1,
         mem_gb=10.0,
         slurm_array_parallelism=10,
@@ -38,4 +38,4 @@ if __name__ == "__main__":
         slurm_qos="vision-polina-main",
         timeout_min=10_000,
     )
-    jobs = executor.map_array(main, models)
+    jobs = executor.map_array(main, subject_ids)

@@ -15,7 +15,7 @@ def main(model):
         {dir}/data/ljubljana/{subject_id}/xrays \
         -v {dir}/data/ljubljana/{subject_id}/volume.nii.gz \
         -c {dir / model} \
-        -o {dir}/results/ljubljana/register/patient_specific/{subject_id}/{epoch} \
+        -o {dir}/results/ljubljana/register/finetuned/{subject_id}/{epoch} \
         --linearize \
         --subtract_background \
         --scales 15,7.5,5 \
@@ -26,11 +26,11 @@ def main(model):
 
 
 if __name__ == "__main__":
-    models = list(Path("models/vessels/patient_specific").glob("**/*645.pth"))
+    models = list(Path("models/vessels/finetuned").glob("**/*8.pth"))
 
     executor = submitit.AutoExecutor(folder="logs")
     executor.update_parameters(
-        name="xvr-vessels-register-specific",
+        name="xvr-vessels-register-finetuned",
         gpus_per_node=1,
         mem_gb=10.0,
         slurm_array_parallelism=10,

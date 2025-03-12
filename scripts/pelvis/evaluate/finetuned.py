@@ -12,28 +12,28 @@ def main(model):
 
     command = f"""
     xvr register model \
-        {dir}/data/ljubljana/{subject_id}/xrays \
-        -v {dir}/data/ljubljana/{subject_id}/volume.nii.gz \
+        {dir}/data/deepfluoro/{subject_id}/xrays \
+        -v {dir}/data/deepfluoro/{subject_id}/volume.nii.gz \
         -c {dir / model} \
-        -o {dir}/results/ljubljana/register/patient_specific/{subject_id}/{epoch} \
+        -o {dir}/results/deepfluoro/evaluate/finetuned/{subject_id}/{epoch} \
+        --crop 100 \
         --linearize \
-        --subtract_background \
-        --scales 15,7.5,5 \
-        --pattern *[!_max].dcm
+        --init_only \
+        --verbose 0
     """
     command = command.strip().split()
     run(command, check=True)
 
 
 if __name__ == "__main__":
-    models = list(Path("models/vessels/patient_specific").glob("**/*645.pth"))
+    models = sorted(Path("models/pelvis/finetuned/").glob("**/*.pth"))
 
     executor = submitit.AutoExecutor(folder="logs")
     executor.update_parameters(
-        name="xvr-vessels-register-specific",
+        name="xvr-pelvis-eval-finetuned",
         gpus_per_node=1,
         mem_gb=10.0,
-        slurm_array_parallelism=10,
+        slurm_array_parallelism=6,
         slurm_partition="polina-2080ti",
         slurm_qos="vision-polina-main",
         timeout_min=10_000,

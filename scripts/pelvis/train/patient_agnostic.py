@@ -1,13 +1,16 @@
+from pathlib import Path
 from subprocess import run
 
 import submitit
 
 
 def main():
-    command = """
+    dir = Path(__file__).parents[3]
+
+    command = f"""
     xvr train \
-        -i data/ctpelvic1k/imgs_registered \
-        -o models/pelvis/patient_agnostic \
+        -i {dir}/data/ctpelvic1k/imgs_registered \
+        -o {dir}/models/pelvis/patient_agnostic \
         --r1 -45.0 45.0 \
         --r2 -45.0 45.0 \
         --r3 -15.0 15.0 \
@@ -33,8 +36,8 @@ if __name__ == "__main__":
         name="xvr-pelvis-agnostic",
         gpus_per_node=1,
         mem_gb=43.5,
-        slurm_partition="A6000",
-        slurm_exclude="sumac,fennel",
+        slurm_partition="polina-a6000",
+        slurm_qos="vision-polina-main",
         timeout_min=10_000,
     )
     jobs = executor.submit(main)
