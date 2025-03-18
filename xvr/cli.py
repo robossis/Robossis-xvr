@@ -2,6 +2,7 @@ from collections import OrderedDict
 
 import click
 
+from .__init__ import __version__
 from .commands import animate, dicom, finetune, fixed, model, restart, train, dcm2nii
 
 
@@ -30,7 +31,9 @@ register.add_command(fixed)
 
 
 @click.group(cls=OrderedGroup)
-def cli():
+@click.version_option(__version__)
+@click.pass_context
+def cli(ctx):
     """
     xvr is a PyTorch package for training, fine-tuning, and performing 2D/3D X-ray to CT/MR registration with pose regression models.
     """
