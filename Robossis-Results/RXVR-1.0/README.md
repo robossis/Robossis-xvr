@@ -30,12 +30,16 @@ Quantitative metrics: mean Target Registration Error (mTRE).
 
 1- **Fine-Tuning a Patient-Agnostic Model (Model B)**
 xvr finetune --inpath SE000002.nii.gz --outpath output --epochs 10 --batch_size 116
+
 Input: femur CT (SE000002.nii.gz)
+
 Output: Finetuned_Patient_Agnostic.pth
 
 2- **Training a Patient-Specific Model (Model A)**
 xvr train --inpath SE000002.nii.gz --outpath output --epochs 230 --batch_size 32 --height 256 --delx 0.310547
+
 Input: femur CT (SE000002.nii.gz)
+
 Output: Model_trained_from_scratch.pth
 
 ### Results
