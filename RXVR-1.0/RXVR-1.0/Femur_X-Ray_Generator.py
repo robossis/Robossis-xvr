@@ -103,9 +103,9 @@ device = 'cpu'
 
 # DRR configuration
 sdd = 1000
-height = 980
-width = 980
-delx = 0.31608
+height = 1200
+width = 1200
+delx = 0.25813333
 
 # Load CT
 subject = read(ct_path)
@@ -116,7 +116,7 @@ torch.cuda.empty_cache()
 
 # Define pose
 rot = torch.tensor([[0.0, 0.0, 0.0]], device=device)
-xyz = torch.tensor([[0.0, 850, 150.0]], device=device)
+xyz = torch.tensor([[0.0, 1000.0, 0.0]], device=device)
 
 
 # Generate DRR

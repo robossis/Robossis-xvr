@@ -1,3 +1,0 @@
-Femur Ct Volume - https://drive.google.com/file/d/1yThvwrruhk8dFwmu-TV_vXfUzeb-l4f7/view?usp=sharing
-Fine-Tuned Patient Agnostic Model - https://drive.google.com/file/d/1tRFtPk6vbQNuJBp9twNwXN0aT9Et-J4I/view?usp=sharing
-Patient Specific Model Trained From Scratch - https://drive.google.com/file/d/1749QmFJBExI1MmHppk1_82InQ7YQ88uW/view?usp=sharing
