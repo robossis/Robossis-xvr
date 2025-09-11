@@ -59,10 +59,12 @@ Apply ICP refinement to initial and final pose estimates for an accuracy boost.
 **Proximal Femur**
 
 Translation only: mTRE reduced from ~2 mm → 0.3–0.7 mm after ICP.
+
 <img width="1040" height="433" alt="Screenshot 2025-09-03 160805" src="https://github.com/user-attachments/assets/050dea9c-a0a3-41a6-bf5f-1ea5c29c84a2" />
 
 Complex rotations(+30° α,+45° β,+15° γ): reduced from ~2–6 mm → ≤1 mm after ICP.
- Before ICP:
+
+Before ICP:
 
  <img width="998" height="418" alt="Screenshot 2025-09-05 103703" src="https://github.com/user-attachments/assets/1a99a159-2674-41f6-a3d2-79e72e6756d1" />
 
