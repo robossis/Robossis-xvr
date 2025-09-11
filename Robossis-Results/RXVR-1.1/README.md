@@ -25,13 +25,14 @@ Evaluation on:
 ### Results
 
 **Synthetic X-Rays (constant FOV = 309.76 mm)**
-Patient-specific model:
+
+**Patient-specific model:**
 
 At 1024×1024, mTRE = 602.79 mm (final), 549.61 mm (initial).
 <img width="1252" height="487" alt="Final_Pose" src="https://github.com/user-attachments/assets/34086265-5ce9-4ff2-bcba-65fc82cc156f" />
 <img width="1251" height="492" alt="Initial_Pose" src="https://github.com/user-attachments/assets/52ea41ea-6419-4165-98a7-7ecf6bce126c" />
 
-Fine-tuned model:
+**Fine-tuned model:**
 
 At 1024×1024, mTRE = 612.20 mm (final), 579.40 mm (initial)
 <img width="1261" height="492" alt="Initial_Pose" src="https://github.com/user-attachments/assets/7a1cef09-5768-4bfa-9f1a-a89606078923" />
