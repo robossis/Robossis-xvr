@@ -21,39 +21,69 @@ Apply ICP refinement to initial and final pose estimates for an accuracy boost.
 ### Training model parameters
 
  "xvr", "train",
+ 
     "--inpath", input_path,
+    
     "--outpath", output_path,
+    
     "--r1", "-45", "45",
+    
     "--r2", "-45", "45",
+    
     "--r3", "-15", "15",
+    
     "--tx", "-500", "500",
+    
     "--ty", "-1000", "-400",
+    
     "--tz", "-500", "500",
+    
     "--sdd", "1000.00",
+    
     "--height", "128",
+    
     "--delx", "2.42",
+    
     "--lr", "0.01",
+    
     "--reverse_x_axis",             #
+    
     "--orientation", "PA",
+    
     "--batch_size", "100",
+    
     "--n_epochs", "1000",
+    
     "--n_batches_per_epoch", "100",
+    
     "--project", "RXVR1.2",
+    
     "--name", "RXVR1.2_training"
 
 ### Fine-tuning model parameters
 
 "xvr", "finetune",
+
     "--inpath", input_path,
+    
     "--outpath", output_path,
+    
     "--ckptpath", ckpt_path,
+    
     "--lr", "0.007",                            # Optional: learning rate (0.01,0.001,0.005,0.007)
+    
     "--batch_size", "100",
+    
     "--n_epochs", "25",
+    
     "--n_batches_per_epoch", "50",
+    
     "--rescale", "1.0",
+    
     "--project", "RXVR1.2",                     # Optional: wandb project name
+    
     "--name", "RXVR1.2_Finetuned_05"
+    
 
 ### Results
 **Proximal Femur**
