@@ -1,4 +1,13 @@
+
 # RXVR 1.2
+
+## Robossis Pose Estimation Models (Hosted on Hugging Face)
+
+-  **RXVR1.2 Original Model**  
+  [![Model](https://img.shields.io/badge/HuggingFace-RXVR1.2--model-black?logo=huggingface)](https://huggingface.co/Robossis/RXVR1.2-model)
+
+-  **RXVR1.2 Finetuned Model**  
+  [![Model](https://img.shields.io/badge/HuggingFace-RXVR1.2--model__finetuned-black?logo=huggingface)](https://huggingface.co/Robossis/RXVR1.2-model_finetuned)
 
 ### Overview
 
